@@ -3,7 +3,6 @@ package lib
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -14,12 +13,12 @@ import (
 	"time"
 
 	"github.com/justmiles/go-confluence"
+	e "github.com/justmiles/go-markdown2confluence/lib/extension"
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/extension"
 	"github.com/yuin/goldmark/parser"
 	"github.com/yuin/goldmark/renderer/html"
-
-	e "github.com/justmiles/go-markdown2confluence/lib/extension"
+	"go.abhg.dev/goldmark/mermaid"
 )
 
 const (
@@ -63,9 +62,9 @@ func (m *Markdown2Confluence) CreateClient() {
 }
 
 // SourceEnvironmentVariables overrides Markdown2Confluence with any environment variables that are set
-//  - CONFLUENCE_USERNAME
-//  - CONFLUENCE_PASSWORD
-//  - CONFLUENCE_ENDPOINT
+//   - CONFLUENCE_USERNAME
+//   - CONFLUENCE_PASSWORD
+//   - CONFLUENCE_ENDPOINT
 func (m *Markdown2Confluence) SourceEnvironmentVariables() {
 	var s string
 	s = os.Getenv("CONFLUENCE_USERNAME")
@@ -187,9 +186,9 @@ func (m *Markdown2Confluence) Run() []error {
 						}
 
 						if m.UseDocumentTitle == true {
-							doc_title := getDocumentTitle(path)
-							if doc_title != "" {
-								tempTitle = doc_title
+							docTitle := getDocumentTitle(path)
+							if docTitle != "" {
+								tempTitle = docTitle
 							}
 						}
 
@@ -301,7 +300,7 @@ func validateInput(s string, msg string) {
 	}
 }
 
-func renderContent(filePath, s string, withHardWraps bool) (content string, images []string, err error) {
+func renderContent(filePath, s string, withHardWraps bool) (string, []string, error) {
 	confluenceExtension := e.NewConfluenceExtension(filePath)
 	ro := goldmark.WithRendererOptions(
 		html.WithXHTML(),
@@ -320,6 +319,7 @@ func renderContent(filePath, s string, withHardWraps bool) (content string, imag
 		ro,
 		goldmark.WithExtensions(
 			confluenceExtension,
+			&mermaid.Extender{RenderMode: mermaid.RenderModeServer},
 		),
 	)
 
@@ -353,16 +353,16 @@ func deleteFromSlice(s []string, del string) []string {
 
 func getDocumentTitle(p string) string {
 	// Read file to check for the content
-	file_content, err := ioutil.ReadFile(p)
+	fileContent, err := os.ReadFile(p)
 	if err != nil {
 		log.Fatal(err)
 	}
 	// Convert []byte to string and print to screen
-	text := string(file_content)
+	text := string(fileContent)
 
 	// check if there is a
-	e := `^#\s+(.+)`
-	r := regexp.MustCompile(e)
+	exp := `^#\s+(.+)`
+	r := regexp.MustCompile(exp)
 	result := r.FindStringSubmatch(text)
 	if len(result) > 1 {
 		// assign the Title to the matching group

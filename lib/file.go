@@ -2,7 +2,7 @@ package lib
 
 import (
 	"fmt"
-	"io/ioutil"
+	"os"
 	"strings"
 
 	"github.com/justmiles/go-confluence"
@@ -32,7 +32,7 @@ func (f *MarkdownFile) FormattedPath() (s string) {
 func (f *MarkdownFile) Upload(m *Markdown2Confluence) (urlPath string, err error) {
 	var ancestorID string
 	// Content of Wiki
-	dat, err := ioutil.ReadFile(f.Path)
+	dat, err := os.ReadFile(f.Path)
 	if err != nil {
 		return urlPath, fmt.Errorf("Could not open file %s:\n\t%s", f.Path, err)
 	}
